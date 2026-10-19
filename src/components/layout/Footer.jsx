@@ -1,4 +1,5 @@
 import { Sparkles, Heart, ArrowUp, MessageCircle } from 'lucide-react'
+import logoImg from '../../assets/logo.jpg'
 
 export default function Footer() {
   const scrollToTop = () => {
@@ -17,7 +18,7 @@ export default function Footer() {
             <div className="flex items-center gap-3">
               <div className="relative w-12 h-12 rounded-full border border-[#dfba73]/50 p-0.5 bg-gradient-to-tr from-purple-600 to-[#dfba73] overflow-hidden shadow-md">
                 <img
-                  src="/logo.jpg"
+                  src={logoImg}
                   alt="Alma Sagrada"
                   className="w-full h-full object-cover rounded-full"
                 />

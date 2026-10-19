@@ -1,4 +1,5 @@
 import { Sparkles, ArrowRight, Waves, Heart, Compass, ShieldCheck } from 'lucide-react'
+import logoImg from '../../assets/logo.jpg'
 
 export default function HeroSection({ onOpenBooking }) {
   return (
@@ -110,7 +111,7 @@ export default function HeroSection({ onOpenBooking }) {
               {/* Main Central Circular Logo */}
               <div className="relative w-64 h-64 sm:w-80 sm:h-80 rounded-full p-2 bg-gradient-to-tr from-[#dfba73] via-[#7c3aed] to-[#dfba73] shadow-2xl shadow-purple-950/80 purple-glow-lg overflow-hidden group">
                 <img
-                  src="/logo.jpg"
+                  src={logoImg}
                   alt="Alma Sagrada - Sanación Holística y Geometría"
                   className="w-full h-full object-cover rounded-full transition-transform duration-700 group-hover:scale-105"
                 />

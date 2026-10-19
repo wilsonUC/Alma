@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, Sparkles, MessageCircle } from 'lucide-react'
+import logoImg from '../../assets/logo.jpg'
 
 export default function BookingModal({ isOpen, onClose, initialService = 'Reiki Usui a Distancia' }) {
   const [name, setName] = useState('')
@@ -48,7 +49,7 @@ ${notes.trim() ? `Motivo / Consulta: ${notes.trim()}` : ''}`
         <div className="flex items-center gap-3 mb-4">
           <div className="relative w-11 h-11 rounded-full border border-[#dfba73]/60 p-0.5 bg-gradient-to-tr from-purple-600 to-[#dfba73] overflow-hidden shadow-md">
             <img
-              src="/logo.jpg"
+              src={logoImg}
               alt="Alma Sagrada"
               className="w-full h-full object-cover rounded-full"
             />

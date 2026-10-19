@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Sparkles, Menu, X, Heart, Shield, Waves, Compass, BookOpen } from 'lucide-react'
+import logoImg from '../../assets/logo.jpg'
 
 export default function Navbar({ onOpenBooking }) {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -35,7 +36,7 @@ export default function Navbar({ onOpenBooking }) {
         <a href="#" className="flex items-center gap-3.5 group">
           <div className="relative w-11 h-11 sm:w-12 sm:h-12 rounded-full border-2 border-[#dfba73]/60 p-0.5 bg-gradient-to-tr from-[#7c3aed] via-[#1c0b33] to-[#dfba73] shadow-md shadow-purple-900/50 transition-all duration-300 group-hover:scale-105 group-hover:border-[#dfba73] overflow-hidden">
             <img
-              src="/logo.jpg"
+              src={logoImg}
               alt="Logo Alma Sagrada"
               className="w-full h-full object-cover rounded-full"
             />
