@@ -61,22 +61,45 @@ export default function FrequencyPlayer() {
   const audioCtxRef = useRef(null)
   const oscRef = useRef(null)
   const gainNodeRef = useRef(null)
+  const stopTimeoutRef = useRef(null)
 
-  const stopTone = () => {
+  const stopTone = (immediate = false) => {
+    if (stopTimeoutRef.current) {
+      clearTimeout(stopTimeoutRef.current)
+      stopTimeoutRef.current = null
+    }
+
     if (gainNodeRef.current && audioCtxRef.current) {
+      const ctx = audioCtxRef.current
       try {
-        gainNodeRef.current.gain.linearRampToValueAtTime(
-          0.0001,
-          audioCtxRef.current.currentTime + 0.3
-        )
-        setTimeout(() => {
+        if (immediate) {
+          gainNodeRef.current.gain.cancelScheduledValues(ctx.currentTime)
+          gainNodeRef.current.gain.setValueAtTime(0.0001, ctx.currentTime)
           if (oscRef.current) {
-            oscRef.current.stop()
-            oscRef.current.disconnect()
+            try {
+              oscRef.current.stop()
+              oscRef.current.disconnect()
+            } catch (e) {}
             oscRef.current = null
           }
           setIsPlaying(false)
-        }, 320)
+        } else {
+          gainNodeRef.current.gain.cancelScheduledValues(ctx.currentTime)
+          gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, ctx.currentTime)
+          gainNodeRef.current.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + 0.15)
+          
+          stopTimeoutRef.current = setTimeout(() => {
+            if (oscRef.current) {
+              try {
+                oscRef.current.stop()
+                oscRef.current.disconnect()
+              } catch (e) {}
+              oscRef.current = null
+            }
+            setIsPlaying(false)
+            stopTimeoutRef.current = null
+          }, 160)
+        }
       } catch (e) {
         setIsPlaying(false)
       }
@@ -86,46 +109,63 @@ export default function FrequencyPlayer() {
   }
 
   const playTone = (freqHz) => {
-    stopTone()
+    // Clear any pending stop actions
+    if (stopTimeoutRef.current) {
+      clearTimeout(stopTimeoutRef.current)
+      stopTimeoutRef.current = null
+    }
 
-    setTimeout(() => {
-      try {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext
-        if (!AudioContextClass) return
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext
+      if (!AudioContextClass) return
 
-        if (!audioCtxRef.current) {
-          audioCtxRef.current = new AudioContextClass()
-        }
-
-        if (audioCtxRef.current.state === 'suspended') {
-          audioCtxRef.current.resume()
-        }
-
-        const ctx = audioCtxRef.current
-        const osc = ctx.createOscillator()
-        const gainNode = ctx.createGain()
-
-        osc.type = 'sine'
-        osc.frequency.setValueAtTime(freqHz, ctx.currentTime)
-
-        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(
-          Math.max(0.001, volume * 0.4),
-          ctx.currentTime + 0.4
-        )
-
-        osc.connect(gainNode)
-        gainNode.connect(ctx.destination)
-
-        osc.start()
-
-        oscRef.current = osc
-        gainNodeRef.current = gainNode
-        setIsPlaying(true)
-      } catch (err) {
-        console.error('Audio context error:', err)
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new AudioContextClass()
       }
-    }, 100)
+
+      const ctx = audioCtxRef.current
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+
+      const targetGain = Math.max(0.001, volume * 0.4)
+
+      // If oscillator is already active, transition frequency seamlessly without stopping
+      if (oscRef.current && gainNodeRef.current) {
+        oscRef.current.frequency.cancelScheduledValues(ctx.currentTime)
+        oscRef.current.frequency.setValueAtTime(oscRef.current.frequency.value, ctx.currentTime)
+        oscRef.current.frequency.exponentialRampToValueAtTime(freqHz, ctx.currentTime + 0.12)
+
+        gainNodeRef.current.gain.cancelScheduledValues(ctx.currentTime)
+        gainNodeRef.current.gain.setValueAtTime(gainNodeRef.current.gain.value, ctx.currentTime)
+        gainNodeRef.current.gain.linearRampToValueAtTime(targetGain, ctx.currentTime + 0.1)
+
+        setIsPlaying(true)
+        return
+      }
+
+      // New oscillator setup
+      const osc = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freqHz, ctx.currentTime)
+
+      gainNode.gain.setValueAtTime(0.0001, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(targetGain, ctx.currentTime + 0.2)
+
+      osc.connect(gainNode)
+      gainNode.connect(ctx.destination)
+
+      osc.start()
+
+      oscRef.current = osc
+      gainNodeRef.current = gainNode
+      setIsPlaying(true)
+    } catch (err) {
+      console.error('Audio context error:', err)
+      setIsPlaying(false)
+    }
   }
 
   const handleTogglePlay = () => {
@@ -154,7 +194,7 @@ export default function FrequencyPlayer() {
 
   useEffect(() => {
     return () => {
-      stopTone()
+      stopTone(true)
       if (audioCtxRef.current) {
         audioCtxRef.current.close().catch(() => {})
       }
